@@ -3,7 +3,7 @@ package ch.heigvd.dai.commands;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-    description = "A small game to experiment with TCP.",
+    description = "Sudoku game.",
     version = "1.0.0",
     subcommands = {
       Client.class,
