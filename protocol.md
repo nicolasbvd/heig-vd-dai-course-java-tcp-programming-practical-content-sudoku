@@ -6,6 +6,19 @@ The Sudoku Game Protocol defines the communication between a client and a server
 
 The Sudoku Game Protocol allows users to connect to a server, request Sudoku grid, and submit moves. The server verifies the correctness of each move and provides feedback.
 
+|    | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+---|-|--|-|-|-|--|-|-|-|
+ A |  |  | |  |   |  |   |   |   |
+| B |  |  | |  |   |  |   |   |   |
+| C |  |  | |  |   |  |   |   |   |
+| D |  |  | |  |   |  |   |   |   |
+| E |  |  | |  |   |  |   |   |   |
+| F |  |  | |  |   |  |   |   |   |
+| G |  |  | |  |   |  |   |   |   |
+| H |  |  | |  |   |  |   |   |   |
+| I |  |  | |  |   |  |   |   |   |
+
+
 ## Section 2 - Transport Protocol
 
 The Sudoku Game Protocol uses TCP to ensure reliable data transmission. The server listens on port **1236** for client connections.
@@ -63,6 +76,8 @@ SELECT <case name> <number to play>
 Server sends COMPLETED:
 Congratulation, you won!
 then it sends HELP again.
+
+
 
 ## Section 5 - Examples
 
