@@ -1,4 +1,4 @@
-package ch.heigvd.dai.commands;
+package ch.heigvd.dai.commands.clientCLI;
 import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
@@ -29,7 +29,6 @@ public class Select implements Callable<Integer> {
             case 1: System.out.println("Bad move, out of boundary");break;
             case 2: System.out.println("Bad move, case already used");break;
             case 3: System.out.println("Bad move");break;
-            default: System.out.println("Bad move");break;
         }
         //sudoku.changeGrid(argument1, argument2);
         return 0;
