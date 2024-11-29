@@ -1,8 +1,6 @@
 package ch.heigvd.dai.sudoku;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 class Sudoku9x9FileManager {
