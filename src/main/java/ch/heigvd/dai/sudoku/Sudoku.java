@@ -1,11 +1,45 @@
 package ch.heigvd.dai.sudoku;
-
+import java.util.Arrays;
 import java.util.BitSet;
+import java.io.*;
+
+import static ch.heigvd.dai.sudoku.Difficulty.*;
+import static ch.heigvd.dai.sudoku.MoveValidity.*;
+
 
 public class Sudoku {
-    private final int size;
-    private final int[][] grid;
-    private final BitSet mask;
+
+    private int size;
+    private int[][] grid;
+    private BitSet mask;
+
+    int hexToInt(char c) {
+        // Check if the character is a digit (0-9)
+        if (c >= '0' && c <= '9') {
+            return c - '0';
+        }
+        // Check if the character is an uppercase hex digit (A-F)
+        else if (c >= 'A' && c <= 'G') {
+            return c - 'A' + 10;
+        }
+        // Check if the character is a lowercase hex digit (a-f)
+        else if (c >= 'a' && c <= 'g') {
+            return c - 'a' + 10;
+        }
+        // If not a valid hex character, throw an exception
+        throw new IllegalArgumentException("Invalid hexadecimal character: " + c);
+    }
+
+    char intToHex(int i) {
+        // Check if the integer is within the valid range (0-15)
+        if (i >= 0 && i <= 9) {
+            return (char) (i + '0');
+        } else if (i >= 10 && i <= 15) {
+            return (char) (i - 10 + 'A');
+        }
+        // If not within range, throw an exception
+        throw new IllegalArgumentException("Invalid integer for hexadecimal: " + i);
+    }
 
     public Sudoku(int size, int[][] grid, BitSet mask) {
         this.size = size;
@@ -28,6 +62,64 @@ public class Sudoku {
         }
     }
 
+    public Sudoku(int new_size){
+        size = new_size;
+        grid = new int[size][size];
+        mask = new BitSet(size * size);
+    }
+
+    byte[] importSudoku9x9(Difficulty difficulty) throws IOException {
+        String sudokuString;
+        Sudoku9x9FileManager manager = new Sudoku9x9FileManager();
+        sudokuString = manager.getRandomPuzzle(difficulty);
+
+        // Convert the 81-character grid string to byte array
+        byte[] to_solve = new byte[81];
+        for (int i = 0; i < 81; i++) {
+            char c = sudokuString.charAt(i);
+            // Convert char to numeric value (0-9)
+            to_solve[i] = (byte)(c - '0');
+
+            //To remove when solver
+            grid[i/size][i%size] = to_solve[i];
+        }
+
+
+        /*
+        Solve and mask
+         */
+
+        return to_solve;
+    }
+
+    /*
+    TODO not buffered
+     */
+    byte[] importSudoku16x16() throws IOException {
+        String[] sudokuString;
+        Sudoku16x16FileManager manager = new Sudoku16x16FileManager();
+        sudokuString = manager.getRandomPuzzle();
+
+        byte[] toSolve = new byte[16*16];
+        BitSet new_mask =  new BitSet(16*16);
+        for (int row = 0; row < 16; row++) {
+            for (int col = 0; col < 16; col++) {
+                grid[row][col] = hexToInt(sudokuString[1].charAt(row*16+col));
+                toSolve[row*16+col] = (byte)hexToInt(sudokuString[0].charAt(row*16+col));
+                if(toSolve[row*16+col] == 0) {
+                    new_mask.set(row * 16 + col);
+                }
+            }
+        }
+        mask = new_mask;
+        return toSolve;
+    }
+
+    //Medium default value
+    byte[] importSudoku9x9() throws IOException {
+        return importSudoku9x9(MEDIUM);
+    }
+
     public byte[] encode() {
         byte[] encoded = new byte[size * size + 1];
         encoded[0] = (byte) size;
@@ -39,24 +131,24 @@ public class Sudoku {
         return encoded;
     }
 
-    public int verifyMove(byte[] move) {
+    public MoveValidity verifyMove(byte[] move) {
         // Check boundaries
         if (!(move[0] >= 0 && move[0] < size && move[1] >= 0 && move[1] < size)) {
-            return 1;
+            return OUT_OF_BOUNDS;
         }
 
         // Check if not already placed
         if (mask.get(move[0] * size + move[1])) {
-            return 2;
+            return ALREADY_PLACED;
         }
 
         // Check if correct
         if (move[2] != grid[move[0]][move[1]]) {
-            return 3;
+            return WRONG_MOVE;
         }
 
         // Correct move
-        return 0;
+        return CORRECT_MOVE;
     }
 
     public Sudoku applyMask() {
@@ -71,6 +163,7 @@ public class Sudoku {
         return sudoku;
     }
 
+    //TODO 16x16 not supported
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -125,31 +218,12 @@ public class Sudoku {
 
     // Test class to demonstrate usage
     static class Test {
-        public static void main(String[] args) {
+        public static void main(String[] args) throws IOException {
             // A valid 9x9 Sudoku grid
-            int[][] grid = {
-                    {5, 3, 4, 6, 7, 8, 9, 1, 2},
-                    {6, 7, 2, 1, 9, 5, 3, 4, 8},
-                    {1, 9, 8, 3, 4, 2, 5, 6, 7},
-                    {8, 5, 9, 7, 6, 1, 4, 2, 3},
-                    {4, 2, 6, 8, 5, 3, 7, 9, 1},
-                    {7, 1, 3, 9, 2, 4, 8, 5, 6},
-                    {9, 6, 1, 5, 3, 7, 2, 8, 4},
-                    {2, 8, 7, 4, 1, 9, 6, 3, 5},
-                    {3, 4, 5, 2, 8, 6, 1, 7, 9}
-            };
-
-            int size = 9;
-            BitSet mask = new BitSet(size * size);
-
-            // Example: mask out some positions (0,0), (0,1), (1,1)
-            mask.set(0);  // Position (0,0)
-            mask.set(1);  // Position (0,1)
-            mask.set(10); // Position (1,1)
-
-            Sudoku sudoku = new Sudoku(size, grid, mask);
-            Sudoku masked = sudoku.applyMask();
-            System.out.println(masked);
+            Sudoku sudoku = new Sudoku(9);
+            byte[] move = sudoku.importSudoku9x9();
+            System.out.println(Arrays.toString(move));
+            System.out.println(sudoku);
         }
     }
 }
