@@ -1,11 +1,9 @@
 package ch.heigvd.dai.sudoku;
-import java.util.Arrays;
 import java.util.BitSet;
 import java.io.*;
 
 import static ch.heigvd.dai.sudoku.Difficulty.*;
 import static ch.heigvd.dai.sudoku.MoveValidity.*;
-
 
 public class Sudoku {
 
@@ -18,11 +16,11 @@ public class Sudoku {
         if (c >= '0' && c <= '9') {
             return c - '0';
         }
-        // Check if the character is an uppercase hex digit (A-F)
+        // Check if the character is an uppercase hex digit (A-G)
         else if (c >= 'A' && c <= 'G') {
             return c - 'A' + 10;
         }
-        // Check if the character is a lowercase hex digit (a-f)
+        // Check if the character is a lowercase hex digit (a-g)
         else if (c >= 'a' && c <= 'g') {
             return c - 'a' + 10;
         }
@@ -31,10 +29,10 @@ public class Sudoku {
     }
 
     char intToHex(int i) {
-        // Check if the integer is within the valid range (0-15)
+        // Check if the integer is within the valid range (0-16)
         if (i >= 0 && i <= 9) {
             return (char) (i + '0');
-        } else if (i >= 10 && i <= 15) {
+        } else if (i >= 10 && i <= 16) {
             return (char) (i - 10 + 'A');
         }
         // If not within range, throw an exception
@@ -50,14 +48,18 @@ public class Sudoku {
         this.mask = mask;
     }
 
-    public Sudoku(byte[] encodedGrid) {
-        size = encodedGrid[0];
+    public Sudoku(String stringGrid, int new_size) {
+        size = new_size;
         grid = new int[size][size];
         mask = new BitSet(size * size);  // Initialize empty mask
 
+        // split on comma or space with regex
+        String[] numbers = stringGrid.split("[,\\s]+");
+
+        // Convert strings to integers and populate the grid
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
-                grid[i][j] = encodedGrid[i * size + j + 1];
+                grid[i][j] = Integer.parseInt(numbers[i * size + j]);
             }
         }
     }
@@ -68,82 +70,75 @@ public class Sudoku {
         mask = new BitSet(size * size);
     }
 
-    byte[] importSudoku9x9(Difficulty difficulty) throws IOException {
+    String importSudoku9x9(Difficulty difficulty) throws IOException {
         String sudokuString;
         Sudoku9x9FileManager manager = new Sudoku9x9FileManager();
         sudokuString = manager.getRandomPuzzle(difficulty);
 
-        // Convert the 81-character grid string to byte array
-        byte[] to_solve = new byte[81];
-        for (int i = 0; i < 81; i++) {
-            char c = sudokuString.charAt(i);
-            // Convert char to numeric value (0-9)
-            to_solve[i] = (byte)(c - '0');
-
-            //To remove when solver
-            grid[i/size][i%size] = to_solve[i];
+        BitSet new_mask =  new BitSet(9*9);
+        for (int row = 0; row < 9; row++) {
+            for (int col = 0; col < 9; col++) {
+                grid[row][col] = hexToInt(sudokuString.charAt(row*9+col));
+                if(grid[row][col] == 0) {
+                    new_mask.set(row * 9 + col);
+                }
+            }
         }
+        mask = new_mask;
 
 
         /*
-        Solve and mask
+        Solve
          */
 
-        return to_solve;
+        return sudokuString;
     }
 
     /*
     TODO not buffered
      */
-    byte[] importSudoku16x16() throws IOException {
+    String importSudoku16x16() throws IOException {
         String[] sudokuString;
         Sudoku16x16FileManager manager = new Sudoku16x16FileManager();
         sudokuString = manager.getRandomPuzzle();
 
-        byte[] toSolve = new byte[16*16];
         BitSet new_mask =  new BitSet(16*16);
         for (int row = 0; row < 16; row++) {
             for (int col = 0; col < 16; col++) {
                 grid[row][col] = hexToInt(sudokuString[1].charAt(row*16+col));
-                toSolve[row*16+col] = (byte)hexToInt(sudokuString[0].charAt(row*16+col));
-                if(toSolve[row*16+col] == 0) {
+                if(hexToInt(sudokuString[0].charAt(row*16+col)) == 0) {
                     new_mask.set(row * 16 + col);
                 }
             }
         }
         mask = new_mask;
-        return toSolve;
+        return sudokuString[0];
     }
 
     //Medium default value
-    byte[] importSudoku9x9() throws IOException {
+    String importSudoku9x9() throws IOException {
         return importSudoku9x9(MEDIUM);
     }
 
-    public byte[] encode() {
-        byte[] encoded = new byte[size * size + 1];
-        encoded[0] = (byte) size;
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                encoded[i * size + j + 1] = (byte) grid[i][j];
-            }
-        }
-        return encoded;
-    }
 
-    public MoveValidity verifyMove(byte[] move) {
+    public MoveValidity verifyMove(String position, String value) {
+        // Convert position string (e.g. "B12") to row and column
+        int row = position.charAt(0) - 'A';  // B -> 1
+        int col = Integer.parseInt(position.substring(1)) - 1;  // 12 -> 11
+        int valueInt = Integer.parseInt(value);
+
         // Check boundaries
-        if (!(move[0] >= 0 && move[0] < size && move[1] >= 0 && move[1] < size)) {
+        if (!(row >= 0 && row < size && col >= 0 && col < size)) {
             return OUT_OF_BOUNDS;
         }
 
         // Check if not already placed
-        if (mask.get(move[0] * size + move[1])) {
+        if (mask.get(row * size + col)) {
             return ALREADY_PLACED;
         }
 
         // Check if correct
-        if (move[2] != grid[move[0]][move[1]]) {
+        if (valueInt != grid[row][col]) {
             return WRONG_MOVE;
         }
 
@@ -163,16 +158,15 @@ public class Sudoku {
         return sudoku;
     }
 
-    //TODO 16x16 not supported
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         int blockSize = (int) Math.sqrt(size);
 
         // Add column numbers header
-        sb.append("   "); // Space for row labels
+        sb.append("    "); // Space for row labels (extra space for 2-digit numbers)
         for (int j = 0; j < size; j++) {
-            sb.append(" ").append(j + 1);
+            sb.append(" ").append(intToHex(j));
             if ((j + 1) % blockSize == 0 && j < size - 1) {
                 sb.append("  ");
             }
@@ -180,7 +174,7 @@ public class Sudoku {
         sb.append("\n");
 
         // Add horizontal separator line
-        sb.append("   ");
+        sb.append("    "); // Match the header spacing
         for (int j = 0; j < size; j++) {
             sb.append("--");
             if ((j + 1) % blockSize == 0 && j < size - 1) {
@@ -191,10 +185,10 @@ public class Sudoku {
 
         // Add grid with row labels
         for (int i = 0; i < size; i++) {
-            sb.append((char) ('A' + i)).append(" |");
+            sb.append((char) ('A' + i)).append("  |"); // Extra space for alignment
 
             for (int j = 0; j < size; j++) {
-                sb.append(" ").append((grid[i][j] != 0 ? grid[i][j] : " "));
+                sb.append(" ").append(grid[i][j] != 0 ? intToHex(grid[i][j]) : " ");
                 if ((j + 1) % blockSize == 0 && j < size - 1) {
                     sb.append(" |");
                 }
@@ -202,7 +196,7 @@ public class Sudoku {
             sb.append("\n");
 
             if ((i + 1) % blockSize == 0 && i < size - 1) {
-                sb.append("   ");
+                sb.append("    "); // Match the header spacing
                 for (int j = 0; j < size; j++) {
                     sb.append("--");
                     if ((j + 1) % blockSize == 0 && j < size - 1) {
@@ -220,9 +214,10 @@ public class Sudoku {
     static class Test {
         public static void main(String[] args) throws IOException {
             // A valid 9x9 Sudoku grid
-            Sudoku sudoku = new Sudoku(9);
-            byte[] move = sudoku.importSudoku9x9();
-            System.out.println(Arrays.toString(move));
+            Sudoku sudoku = new Sudoku(16);
+            String move = sudoku.importSudoku16x16();
+            System.out.println(move);
+            System.out.println(sudoku.applyMask());
             System.out.println(sudoku);
         }
     }
