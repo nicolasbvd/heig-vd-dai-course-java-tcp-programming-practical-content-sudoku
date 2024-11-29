@@ -22,8 +22,14 @@ public class Server implements Callable<Integer> {
   }
 
   public enum ServerCommand {
-    ERROR,
-    OK
+    SEND_GRID,
+    CORRECT_MOVE,
+    WRONG_MOVE,
+    ALREADY_PLACED,
+    OUT_OF_BOUNDS,
+    COMPLETED,
+    OK,
+    ERROR
   }
 
   @Override
@@ -56,7 +62,7 @@ public class Server implements Callable<Integer> {
             }
 
             // Split user input to parse command (also known as message)
-            String[] clientRequestParts = clientRequest.split(" ", 2);
+            String[] clientRequestParts = clientRequest.split(" ");
 
             ClientCommand command = null;
             try {
@@ -70,7 +76,7 @@ public class Server implements Callable<Integer> {
             // Handle request from client
             switch (command) {
               case PLAY -> {
-                if (clientRequestParts.length < 2) {
+                if (clientRequestParts.length != 2) {
                   System.out.println(
                           "[Server] " + command + " command received without <gridSize> parameter. Replying with "
                                   + ServerCommand.ERROR
@@ -78,13 +84,11 @@ public class Server implements Callable<Integer> {
                   response = ServerCommand.ERROR + " Missing <gridSize> parameter. Please try again.";
                   break;
                 }
-
-                String name = clientRequestParts[1];
-
+                //out.write(import_sudoku(clientRequestParts[1]));
                 response = ServerCommand.OK + " OK ";
               }
               case SELECT -> {
-                if (clientRequestParts.length < 3) {
+                if (clientRequestParts.length != 3) {
                   System.out.println("[Server] " + command + " command received without <case name> or without <number to play> parameter. Replying with "
                           + ServerCommand.ERROR
                           + ".");
@@ -95,7 +99,23 @@ public class Server implements Callable<Integer> {
                 String caseName = clientRequestParts[1];
                 String numberToPlay = clientRequestParts[2];
 
-                response = ServerCommand.OK + " OK " + caseName + " " + numberToPlay;
+                /*
+                int move = verifyMove(caseName, NumberToPlay);
+                switch(move){
+                  case 0: response = ServerCommand.CORRECT_MOVE + " CORRECT MOVE " + caseName + " " + numberToPlay;
+                          sudoku.changeGrid(caseName, numberToPlay);
+                          break;
+                  case 1: response = ServerCommand.WRONG_MOVE + " WRONG MOVE ";
+                          break;
+                  case 2: response = ServerCommand.ALREADY_PLACED + " ALREADY PLACED ";
+                          break;
+                  case 3: response = ServerCommand.OUT_OF_BOUNDS + " OUT OF BOUNDS ";
+                          break;
+                  case 4: response = ServerCommand.COMPLETED + " COMPLETED ";
+                          sudoku.changeGrid(caseName, numberToPlay);
+                }
+                */
+
               }
               case null, default ->{
                 System.out.println("[Server] Unknown command sent by client, reply with "
@@ -107,8 +127,10 @@ public class Server implements Callable<Integer> {
             }
 
             // Send response to client
-            out.write(response);
-            out.flush();
+            if(response != null) {
+              out.write(response);
+              out.flush();
+            }
           }
 
           System.out.println("[Server] Closing connection");

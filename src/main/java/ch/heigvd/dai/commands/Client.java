@@ -5,7 +5,6 @@ import picocli.CommandLine;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import  ch.heigvd.dai.commands.clientCLI.*;
 
 @CommandLine.Command(name = "client", description = "Start the client part of the network game.")
 public class Client implements Callable<Integer> {
@@ -30,9 +29,12 @@ public class Client implements Callable<Integer> {
   }
 
   public enum ServerCommand {
-    OK,
-    COMPLETED,
-    ERROR
+    RECEIVE_GRID,
+    CORRECT_MOVE,
+    WRONG_MOVE,
+    ALREADY_PLACED,
+    OUT_OF_BOUNDS,
+    COMPLETED
   }
 
   @Override
@@ -54,20 +56,16 @@ public class Client implements Callable<Integer> {
         String userInput = bir.readLine();
 
         try {
-          String[] userInputParts = userInput.split(" ", 2);
+          String[] userInputParts = userInput.split(" ");
           ClientCommand command = ClientCommand.valueOf(userInputParts[0].toUpperCase());
           String request = null;
 
           switch (command) {
             case PLAY:
-              request = ClientCommand.PLAY.toString();
-              Play play = new Play();
-              play.call();
+              request = ClientCommand.PLAY.toString() + " " + userInputParts[1];
               break;
             case SELECT:
-              request = ClientCommand.SELECT.toString();
-              Select select = new Select();
-              select.call();
+              request = ClientCommand.SELECT.toString() + " " + userInputParts[1] + " " + userInputParts[2];
               break;
             case QUIT:
               socket.close();
@@ -94,7 +92,7 @@ public class Client implements Callable<Integer> {
         }
 
         // Split response to parse message (also known as command)
-        String[] serverResponseParts = serverResponse.split(" ", 2);
+        String[] serverResponseParts = serverResponse.split(" ");
 
         ServerCommand message = null;
         try {
@@ -105,22 +103,38 @@ public class Client implements Callable<Integer> {
 
         // Handle response from server
         switch (message) {
-          case OK -> {
-            // The message is always the second part
+          case RECEIVE_GRID->{
+            //sudoku.PlayGrid(serverResponse[0])
             String OKMessage = serverResponseParts[1];
             System.out.println(OKMessage);
             break;
           }
-          case COMPLETED -> {
-            System.out.println("Congratulations! You have completed the game.");
-            help();
-          }
-          case ERROR-> {
-            int errorCode = Integer.parseInt(serverResponseParts[1]);
-            String errorMessage = serverResponseParts[2];
-            System.out.println("[Client] Error from server: " + errorCode + " - " + errorMessage);
+          case CORRECT_MOVE -> {
+            String CorrectMove = serverResponseParts[1];
+            System.out.println(CorrectMove);
+            //sudoku.changeGrid(serverResponse[2], serverResponse[3]
             break;
           }
+          case WRONG_MOVE -> {
+            String WrongMove = serverResponseParts[1];
+            System.out.println(WrongMove);
+            break;
+          }
+          case ALREADY_PLACED -> {
+            String AlreadyPlaced = serverResponseParts[1];
+            System.out.println(AlreadyPlaced);
+            break;
+          }
+          case OUT_OF_BOUNDS -> {
+            String OutOfBounds = serverResponseParts[1];
+            System.out.println(OutOfBounds);
+            break;
+          }
+          case COMPLETED -> {
+              System.out.println("Congratulations! You have completed the game.");
+              help();
+              break;
+            }
           case null, default->{
             System.out.println("Invalid/unknown command sent by server, ignore.");
             break;
