@@ -48,8 +48,8 @@ public class Sudoku {
         this.mask = mask;
     }
 
-    public Sudoku(String stringGrid, int new_size) {
-        size = new_size;
+    public Sudoku(String stringGrid, String new_size) {
+        size = Integer.parseInt(new_size);
         grid = new int[size][size];
         mask = new BitSet(size * size);  // Initialize empty mask
 
@@ -69,6 +69,7 @@ public class Sudoku {
         grid = new int[size][size];
         mask = new BitSet(size * size);
     }
+
 
     String importSudoku9x9(Difficulty difficulty) throws IOException {
         String sudokuString;
@@ -120,6 +121,35 @@ public class Sudoku {
         return importSudoku9x9(MEDIUM);
     }
 
+    public String importSudoku(String new_size_string) throws IOException {
+        int new_size = Integer.parseInt(new_size_string);
+        switch (new_size) {
+            case 9:
+                try {
+                    return importSudoku9x9();  // Default difficulty MEDIUM
+                } catch (IOException e) {
+                    throw new IOException("Error importing 9x9 Sudoku puzzle", e);
+                }
+            case 16:
+                try {
+                    return importSudoku16x16();  // For 16x16 Sudoku
+                } catch (IOException e) {
+                    throw new IOException("Error importing 16x16 Sudoku puzzle", e);
+                }
+            default:
+                throw new IllegalArgumentException("Unsupported Sudoku size: " + new_size);
+        }
+    }
+
+    public void applyMove(String position, String value) {
+        int row = position.charAt(0) - 'A';  // B -> 1
+        int col = Integer.parseInt(position.substring(1)) - 1;  // 12 -> 11
+        int valueInt = Integer.parseInt(value);
+
+        grid[row][col] = valueInt;
+        mask.flip(row * size + col);
+    }
+
 
     public MoveValidity verifyMove(String position, String value) {
         // Convert position string (e.g. "B12") to row and column
@@ -143,6 +173,10 @@ public class Sudoku {
         }
 
         // Correct move
+        applyMove(position, value);
+        if(mask.cardinality() == 0){
+            return COMPLETED;
+        }
         return CORRECT_MOVE;
     }
 

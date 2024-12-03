@@ -1,6 +1,8 @@
 package ch.heigvd.dai.commands;
 
 import java.util.concurrent.Callable;
+
+import ch.heigvd.dai.sudoku.Sudoku;
 import picocli.CommandLine;
 import java.io.*;
 import java.net.*;
@@ -8,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 
 @CommandLine.Command(name = "client", description = "Start the client part of the network game.")
 public class Client implements Callable<Integer> {
+
+  Sudoku sudoku;
 
   @CommandLine.Option(
           names = {"-H", "--host"},
@@ -55,6 +59,7 @@ public class Client implements Callable<Integer> {
         BufferedReader bir = new BufferedReader(inputReader);
         String userInput = bir.readLine();
 
+        String newSize = "";
         try {
           String[] userInputParts = userInput.split(" ");
           ClientCommand command = ClientCommand.valueOf(userInputParts[0].toUpperCase());
@@ -63,6 +68,7 @@ public class Client implements Callable<Integer> {
           switch (command) {
             case PLAY:
               request = ClientCommand.PLAY.toString() + " " + userInputParts[1];
+              newSize = userInputParts[1];
               break;
             case SELECT:
               request = ClientCommand.SELECT.toString() + " " + userInputParts[1] + " " + userInputParts[2];
@@ -101,18 +107,17 @@ public class Client implements Callable<Integer> {
           // Do nothing
         }
 
-        // Handle response from server
+        // Handle response from server TODO Client full wrong protocol logic 
         switch (message) {
           case RECEIVE_GRID->{
-            //sudoku.PlayGrid(serverResponse[0])
-            String OKMessage = serverResponseParts[1];
-            System.out.println(OKMessage);
+            sudoku = new Sudoku(serverResponseParts[1], newSize);
+            System.out.println(serverResponseParts[0]);
             break;
           }
           case CORRECT_MOVE -> {
             String CorrectMove = serverResponseParts[1];
             System.out.println(CorrectMove);
-            //sudoku.changeGrid(serverResponse[2], serverResponse[3]
+            sudoku.verifyMove(serverResponseParts[2], serverResponseParts[3]);
             break;
           }
           case WRONG_MOVE -> {
