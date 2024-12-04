@@ -5,6 +5,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import ch.heigvd.dai.sudoku.enums.MoveValidity;
 import ch.heigvd.dai.sudoku.Sudoku;
@@ -26,6 +28,8 @@ public class Server implements Callable<Integer> {
     SELECT,
   }
 
+  private static final int SERVER_ID = (int) (Math.random() * 1000000);
+
   public enum ServerCommand {
     SEND_GRID,
     CORRECT_MOVE,
@@ -44,6 +48,7 @@ public class Server implements Callable<Integer> {
 
       while (!serverSocket.isClosed()) {
         try (Socket socket = serverSocket.accept();
+             ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
              Reader reader = new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8);
              BufferedReader in = new BufferedReader(reader);
              Writer writer =
@@ -59,6 +64,7 @@ public class Server implements Callable<Integer> {
           while (!socket.isClosed()) {
             // Read response from client
             String clientRequest = in.readLine();
+            executor.submit(new ClientHandler(socket));
             // If clientRequest is null, the client has disconnected
             // The server can close the connection and wait for a new client
             if (clientRequest == null) {
@@ -143,5 +149,54 @@ public class Server implements Callable<Integer> {
 
     }
     return 0;
+  }
+
+  static class ClientHandler implements Runnable {
+
+    private final Socket socket;
+
+    public ClientHandler(Socket socket) {
+      this.socket = socket;
+    }
+
+    @Override
+    public void run() {
+      try (socket; // This allow to use try-with-resources with the socket
+           BufferedReader in =
+                   new BufferedReader(
+                           new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+           BufferedWriter out =
+                   new BufferedWriter(
+                           new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8))) {
+        System.out.println(
+                "[Server "
+                        + SERVER_ID
+                        + "] new client connected from "
+                        + socket.getInetAddress().getHostAddress()
+                        + ":"
+                        + socket.getPort());
+
+        System.out.println(
+                "[Server " + SERVER_ID + "] received textual data from client: " + in.readLine());
+
+        try {
+          System.out.println(
+                  "[Server " + SERVER_ID + "] sleeping for 10 seconds to simulate a long operation");
+          Thread.sleep(10000);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        }
+
+        System.out.println(
+                "[Server " + SERVER_ID + "] sending response to client: ");
+
+        out.write("\n");
+        out.flush();
+
+        System.out.println("[Server " + SERVER_ID + "] closing connection");
+      } catch (IOException e) {
+        System.out.println("[Server " + SERVER_ID + "] exception: " + e);
+      }
+    }
   }
 }
