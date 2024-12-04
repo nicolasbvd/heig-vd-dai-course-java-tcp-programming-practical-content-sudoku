@@ -2,8 +2,15 @@ package ch.heigvd.dai.sudoku;
 import java.util.BitSet;
 import java.io.*;
 
-import static ch.heigvd.dai.sudoku.Difficulty.*;
-import static ch.heigvd.dai.sudoku.MoveValidity.*;
+import ch.heigvd.dai.sudoku.enums.Difficulty;
+import ch.heigvd.dai.sudoku.enums.MoveValidity;
+import ch.heigvd.dai.sudoku.fileManagers.Sudoku16x16FileManager;
+import ch.heigvd.dai.sudoku.fileManagers.Sudoku9x9FileManager;
+import ch.heigvd.dai.sudoku.solver.Solver;
+
+import static ch.heigvd.dai.sudoku.enums.Difficulty.*;
+import static ch.heigvd.dai.sudoku.enums.MoveValidity.*;
+
 
 public class Sudoku {
 
@@ -88,9 +95,29 @@ public class Sudoku {
         mask = new_mask;
 
 
-        /*
-        Solve
-         */
+        // Create and initialize the solver
+        Solver solver = new Solver();
+
+        // Transfer your grid to the solver
+        for (int row = 0; row < 9; row++) {
+            for (int col = 0; col < 9; col++) {
+                if (grid[row][col] != 0) {
+                    solver.addNum(col, row, grid[row][col]);
+                }
+            }
+        }
+
+        // Solve the puzzle
+        if (solver.solveSudoku()) {
+            // Transfer the solution back to your grid
+            for (int row = 0; row < 9; row++) {
+                for (int col = 0; col < 9; col++) {
+                    grid[row][col] = solver.value(col, row);
+                }
+            }
+        } else {
+            throw new IllegalStateException("No solution exists for this puzzle");
+        }
 
         return sudokuString;
     }
@@ -180,6 +207,52 @@ public class Sudoku {
         return CORRECT_MOVE;
     }
 
+    public boolean validity() {
+        // Check rows
+        for (int row = 0; row < size; row++) {
+            BitSet nums = new BitSet(size + 1);
+            for (int col = 0; col < size; col++) {
+                int num = grid[row][col];
+                if (num != 0) {
+                    if (nums.get(num)) return false;
+                    nums.set(num);
+                }
+            }
+        }
+
+        // Check columns
+        for (int col = 0; col < size; col++) {
+            BitSet nums = new BitSet(size + 1);
+            for (int row = 0; row < size; row++) {
+                int num = grid[row][col];
+                if (num != 0) {
+                    if (nums.get(num)) return false;
+                    nums.set(num);
+                }
+            }
+        }
+
+        // Check boxes
+        int boxSize = (int) Math.sqrt(size);
+        for (int box = 0; box < size; box++) {
+            BitSet nums = new BitSet(size + 1);
+            int boxRow = (box / boxSize) * boxSize;
+            int boxCol = (box % boxSize) * boxSize;
+
+            for (int i = 0; i < boxSize; i++) {
+                for (int j = 0; j < boxSize; j++) {
+                    int num = grid[boxRow + i][boxCol + j];
+                    if (num != 0) {
+                        if (nums.get(num)) return false;
+                        nums.set(num);
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
     public Sudoku applyMask() {
         Sudoku sudoku = new Sudoku(size, grid, mask);
         for (int i = 0; i < size; i++) {
@@ -247,12 +320,24 @@ public class Sudoku {
     // Test class to demonstrate usage
     static class Test {
         public static void main(String[] args) throws IOException {
-            // A valid 9x9 Sudoku grid
-            Sudoku sudoku = new Sudoku(16);
-            String move = sudoku.importSudoku16x16();
-            System.out.println(move);
-            System.out.println(sudoku.applyMask());
-            System.out.println(sudoku);
+            // Test different difficulties
+            Difficulty[] difficulties = {EASY, MEDIUM, HARD};
+
+            for (Difficulty diff : difficulties) {
+                System.out.println("\nTesting " + diff + " puzzle:");
+
+                Sudoku sudoku = new Sudoku(9);
+                String original = sudoku.importSudoku9x9(diff);
+
+                System.out.println("Original puzzle:");
+                System.out.println(sudoku.applyMask());
+
+                System.out.println("\nSolved puzzle:");
+                System.out.println(sudoku);
+
+                System.out.println("Solution valid: " + sudoku.validity());
+                System.out.println("---------------------");
+            }
         }
     }
 }

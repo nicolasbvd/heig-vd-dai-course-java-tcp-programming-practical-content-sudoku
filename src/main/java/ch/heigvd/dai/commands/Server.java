@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 
-import ch.heigvd.dai.sudoku.MoveValidity;
+import ch.heigvd.dai.sudoku.enums.MoveValidity;
 import ch.heigvd.dai.sudoku.Sudoku;
 import picocli.CommandLine;
 

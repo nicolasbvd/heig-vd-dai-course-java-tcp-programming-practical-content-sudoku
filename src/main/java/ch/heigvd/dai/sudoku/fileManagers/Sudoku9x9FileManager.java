@@ -1,11 +1,13 @@
-package ch.heigvd.dai.sudoku;
+package ch.heigvd.dai.sudoku.fileManagers;
+import ch.heigvd.dai.sudoku.enums.Difficulty;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Random;
 
-class Sudoku9x9FileManager {
+public class Sudoku9x9FileManager {
 
-    String getRandomPuzzle(Difficulty difficulty) throws IOException {
+    public String getRandomPuzzle(Difficulty difficulty) throws IOException {
         // Define the base path for the dataset
         String basePath = "src/main/java/ch/heigvd/dai/dataset/sudoku-exchange-puzzle-bank/" + switch (difficulty) {
             case EASY -> "easy.txt";
