@@ -111,20 +111,20 @@ public class Server implements Callable<Integer> {
               if (clientRequestParts.length != 2) {
                 System.out.println(
                         "[Server] " + command + " command received without <gridSize> parameter. Replying with "
-                                + ServerCommand.ERROR
+                                + "ERROR"
                                 + ".");
-                response = ServerCommand.ERROR + " Missing <gridSize> parameter. Please try again.";
+                response = "ERROR" + " Missing <gridSize> parameter. Please try again.";
                 break;
               }
               out.write(sudoku.importSudoku(clientRequestParts[1]));
-              response = ServerCommand.OK + " OK ";
+              response = "OK";
             }
             case SELECT -> {
               if (clientRequestParts.length != 3) {
                 System.out.println("[Server] " + command + " command received without <case name> or without <number to play> parameter. Replying with "
-                        + ServerCommand.ERROR
+                        + "ERROR"
                         + ".");
-                response = ServerCommand.ERROR + " Missing <case name> or <number to play> parameter. Please try again.";
+                response = "ERROR" + " Missing <case name> or <number to play> parameter. Please try again.";
                 break;
               }
 
@@ -134,20 +134,20 @@ public class Server implements Callable<Integer> {
 
               MoveValidity move = sudoku.verifyMove(caseName, numberToPlay);
               response = switch (move) {
-                case CORRECT_MOVE -> ServerCommand.CORRECT_MOVE + " CORRECT MOVE " + caseName + " " + numberToPlay;
-                case WRONG_MOVE -> ServerCommand.WRONG_MOVE + " WRONG MOVE ";
-                case ALREADY_PLACED -> ServerCommand.ALREADY_PLACED + " ALREADY PLACED ";
-                case OUT_OF_BOUNDS -> ServerCommand.OUT_OF_BOUNDS + " OUT OF BOUNDS ";
-                case COMPLETED -> ServerCommand.COMPLETED + " COMPLETED ";
+                case CORRECT_MOVE -> "CORRECT MOVE " + caseName + " " + numberToPlay;
+                case WRONG_MOVE -> "WRONG MOVE ";
+                case ALREADY_PLACED -> "ALREADY PLACED ";
+                case OUT_OF_BOUNDS -> "OUT OF BOUNDS ";
+                case COMPLETED -> "COMPLETED ";
                 default -> response;
               };
 
             }
             case null, default -> {
               System.out.println("[Server] Unknown command sent by client, reply with "
-                      + ServerCommand.ERROR
+                      + "ERROR"
                       + ".");
-              response = ServerCommand.ERROR + " Unknown command. Please try again.";
+              response = "ERROR" + " Unknown command. Please try again.";
 
             }
           }
