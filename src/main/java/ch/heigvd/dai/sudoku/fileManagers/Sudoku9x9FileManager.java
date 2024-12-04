@@ -9,7 +9,7 @@ public class Sudoku9x9FileManager {
 
     public String getRandomPuzzle(Difficulty difficulty) throws IOException {
         // Define the base path for the dataset
-        String basePath = "src/main/java/ch/heigvd/dai/dataset/sudoku-exchange-puzzle-bank/" + switch (difficulty) {
+        String basePath = "/app/dataset/sudoku-exchange-puzzle-bank/" + switch (difficulty) {
             case EASY -> "easy.txt";
             case MEDIUM -> "medium.txt";
             case HARD -> "hard.txt";
