@@ -9,7 +9,6 @@ COPY target/java-tcp-programming-1.0-SNAPSHOT.jar /app/java-tcp-programming-1.0-
 # Copy the dataset into the image
 COPY src/main/java/ch/heigvd/dai/dataset /app/dataset
 
-    
 # Expose the required port
 EXPOSE 1236
 

@@ -83,8 +83,11 @@ then it sends HELP again.
 ### Working example
 ![](Images/SudokuWEx.png)
 
-### ERROR: Select a game size that does not exits
+### ERROR: Select a game size that does not exist
 ![](Images/SudokuE1.png)
+
+### ERROR: Select a case before start a game
+![](Images/SudokuSbP.png)
 
 ### RETRY : Select a wrong input
 ![](Images/SudokuWI.png)
