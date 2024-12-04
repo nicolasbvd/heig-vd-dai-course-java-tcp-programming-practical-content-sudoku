@@ -8,10 +8,14 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import ch.heigvd.dai.sudoku.enums.MoveValidity;
+import ch.heigvd.dai.sudoku.Sudoku;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "server", description = "Start the server part of the network game.")
 public class Server implements Callable<Integer> {
+
+  private Sudoku sudoku;
 
   @CommandLine.Option(
       names = {"-p", "--port"},
@@ -91,7 +95,7 @@ public class Server implements Callable<Integer> {
                   response = ServerCommand.ERROR + " Missing <gridSize> parameter. Please try again.";
                   break;
                 }
-                //out.write(import_sudoku(clientRequestParts[1]));
+                out.write(sudoku.importSudoku(clientRequestParts[1]));
                 response = ServerCommand.OK + " OK ";
               }
               case SELECT -> {
@@ -106,22 +110,17 @@ public class Server implements Callable<Integer> {
                 String caseName = clientRequestParts[1];
                 String numberToPlay = clientRequestParts[2];
 
-                /*
-                int move = verifyMove(caseName, NumberToPlay);
-                switch(move){
-                  case 0: response = ServerCommand.CORRECT_MOVE + " CORRECT MOVE " + caseName + " " + numberToPlay;
-                          sudoku.changeGrid(caseName, numberToPlay);
-                          break;
-                  case 1: response = ServerCommand.WRONG_MOVE + " WRONG MOVE ";
-                          break;
-                  case 2: response = ServerCommand.ALREADY_PLACED + " ALREADY PLACED ";
-                          break;
-                  case 3: response = ServerCommand.OUT_OF_BOUNDS + " OUT OF BOUNDS ";
-                          break;
-                  case 4: response = ServerCommand.COMPLETED + " COMPLETED ";
-                          sudoku.changeGrid(caseName, numberToPlay);
-                }
-                */
+
+                MoveValidity move = sudoku.verifyMove(caseName, numberToPlay);
+                response = switch (move) {
+                    case CORRECT_MOVE ->
+                            ServerCommand.CORRECT_MOVE + " CORRECT MOVE " + caseName + " " + numberToPlay;
+                    case WRONG_MOVE -> ServerCommand.WRONG_MOVE + " WRONG MOVE ";
+                    case ALREADY_PLACED -> ServerCommand.ALREADY_PLACED + " ALREADY PLACED ";
+                    case OUT_OF_BOUNDS -> ServerCommand.OUT_OF_BOUNDS + " OUT OF BOUNDS ";
+                    case COMPLETED -> ServerCommand.COMPLETED + " COMPLETED ";
+                    default -> response;
+                };
 
               }
               case null, default ->{

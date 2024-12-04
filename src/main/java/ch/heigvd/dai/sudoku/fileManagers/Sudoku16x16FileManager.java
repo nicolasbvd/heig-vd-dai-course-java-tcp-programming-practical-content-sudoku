@@ -1,4 +1,4 @@
-package ch.heigvd.dai.sudoku;
+package ch.heigvd.dai.sudoku.fileManagers;
 
 import java.io.*;
 import java.nio.file.*;

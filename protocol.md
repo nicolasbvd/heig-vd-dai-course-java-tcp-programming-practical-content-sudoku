@@ -46,18 +46,20 @@ The Sudoku Game Protocol uses TCP to ensure reliable data transmission. The serv
 ### Establish connection
 Server sends HELP: 
 'Welcome to the Sudoku game, here are the commands to start:
-- PLAY <size of grid> (9/16)
-- SELECT <case name> <number to play>
-
-You can anytime send HELP to see it again!'
+- PLAY <size of grid> (9 or 16) 
+- SELECT <case name> <number to play> (if the size of grid is 9: case name : A1-I9, if the size of grid is 16 : A1 - P16");
+- QUIT
+You can anytime send HELP to see it again!
 ### Start the game
 ```bash 
 PLAY <size of grid>
 ```
-- size of grid: choose the size of the sudoku grid (9/16)
+- size of grid: choose the size of the sudoku grid (9 or 16)
 #### Response
+- OK : The game starts
 - ERROR : An error occurred during the start of the game. The size of the grid must be 9 or 16. The error codes are as follow:
   - 1: The size of the grid does not exist
+  - 2: You must enter a size parameter
 
 ### Make a move
 ```bash
@@ -66,18 +68,15 @@ SELECT <case name> <number to play>
 - case name : Select the name of the case, for example, with a grid 9: case name are from 'A1' to 'I9'.
 - number to play: Select the number you want to introduce to the case name.
 #### Response
-- RETRY : The case name corresponds to nothing. Choose a case name valid that exists on the grid.
-- 1: The case name is not valid
-- RETRY : Wrong answer, retry.
-  - 1: The number must be between 1 and size of grid
-  - 2: The response is not valid
+- CORRECT MOVE
+- BAD MOVE : This number can't be here!
+- ALREADY PLACED : This is a fixed variable, it can not be changed
+- OUT OF BOUNDS : Select a case or a number that exists on the grid
   
 ### End of game 
 Server sends COMPLETED:
 Congratulation, you won!
 then it sends HELP again.
-
-
 
 ## Section 5 - Examples
 
@@ -87,8 +86,15 @@ then it sends HELP again.
 ### ERROR: Select a game size that does not exits
 ![](Images/SudokuE1.png)
 
-### ERROR : Select a wrong input or a case used by a fixed variable
-![](Images/SudokuRet.png)
+### RETRY : Select a wrong input
+![](Images/SudokuWI.png)
+
+### RETRY : Select a case with a fix variable
+![](Images/SudokuFV.png)
+
+### RETRY : Select a number or a case out of bounds
+![](Images/SudokuOoB.png)
+
 
 
 
