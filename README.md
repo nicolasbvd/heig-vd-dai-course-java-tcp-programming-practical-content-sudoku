@@ -4,6 +4,18 @@
 
 The Sudoku Game enables multiplayer Sudoku gameplay over a TCP network connection, supporting dynamic grid sizes and concurrent client interactions.
 
+## Docker Usage
+
+Pull and run the container:
+
+```bash
+# Pull the image
+docker pull ghcr.io/kilianfroideva/sudoku/sudoku-app:1.0.0
+
+# Run the container
+docker run -p 1236:1236 ghcr.io/kilianfroideva/sudoku/sudoku-app:1.0.0
+```
+
 ## Get the game on your computer
 
 1. Clone the repository:
