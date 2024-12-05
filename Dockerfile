@@ -15,6 +15,8 @@ EXPOSE 1236
 # Set the entry point to run the application
 ENTRYPOINT ["java", "-jar", "/app/java-tcp-programming-1.0-SNAPSHOT.jar"]
 
+LABEL org.opencontainers.image.source https://github.com/nicolasbvd/heig-vd-dai-course-java-tcp-programming-practical-content-sudoku
+
 #To run client on localhost: docker run -it --network="host" sudoku-app client --host=127.0.0.1
 #To run server: docker run -p 1236:1236 sudoku-app server
 
