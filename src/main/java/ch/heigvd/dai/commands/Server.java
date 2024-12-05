@@ -43,6 +43,8 @@ public class Server implements Callable<Integer> {
     ERROR
   }
 
+  private static boolean pressedPlay = false;
+
   @Override
   public Integer call() throws IOException {
     try (ServerSocket serverSocket = new ServerSocket(port);
@@ -124,6 +126,7 @@ public class Server implements Callable<Integer> {
 
               if(Objects.equals(clientRequestParts[1], "9") || Objects.equals(clientRequestParts[1], "16")){
                 try {
+                  pressedPlay = true;
                   response = "RECEIVE_GRID " + sudoku.importSudoku(clientRequestParts[1]);
                 } catch (Exception e) {
                   e.printStackTrace();
@@ -143,6 +146,13 @@ public class Server implements Callable<Integer> {
                         + "ERROR"
                         + ".");
                 response = "ERROR" + " Missing <case name> or <number to play> parameter or too much parameters. Please try again.";
+                break;
+              }
+              if(!pressedPlay){
+                System.out.println("[Server] " + command + " sent before starting a game. Replying with "
+                        + "ERROR"
+                        + ".");
+                response = "ERROR" + " You must start a game with PLAY <gridSize>, type HELP for more informations.";
                 break;
               }
 

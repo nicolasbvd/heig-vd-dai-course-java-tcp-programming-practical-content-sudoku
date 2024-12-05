@@ -71,6 +71,9 @@ public class Client implements Callable<Integer> {
               newSize = userInputParts[1];
               break;
             case SELECT:
+              if(userInputParts.length > 3) {
+                throw new IllegalStateException("Commands unknown");
+              }
               request = ClientCommand.SELECT.toString() + " " + userInputParts[1] + " " + userInputParts[2];
               break;
             case QUIT:
@@ -120,7 +123,7 @@ public class Client implements Callable<Integer> {
           case CORRECT_MOVE -> {
             String CorrectMove = serverResponseParts[0];
             System.out.println(CorrectMove);
-            sudoku.verifyMove(serverResponseParts[1], serverResponseParts[2]);
+            sudoku.applyMove(serverResponseParts[1], serverResponseParts[2]);
             System.out.println(sudoku);
             break;
           }
@@ -140,13 +143,13 @@ public class Client implements Callable<Integer> {
             break;
           }
           case COMPLETED -> {
-              System.out.println(sudoku);
-              System.out.println("Congratulations! You have completed the game.");
-              help();
-              break;
-            }
+            System.out.println(sudoku);
+            System.out.println("Congratulations! You have completed the game.");
+            help();
+            break;
+          }
           case null, default->{
-            System.out.println("Invalid/unknown command sent by server, ignore.");
+            System.out.println(serverResponse);
             break;
           }
         }

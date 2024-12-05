@@ -176,9 +176,11 @@ public class Sudoku {
         int row = position.charAt(0) - 'A';  // B -> 1
         int col = Integer.parseInt(position.substring(1)) - 1;  // 12 -> 11
         int valueInt = Integer.parseInt(value);
-
+        System.out.println("Avant modification : " + grid[row][col] + " à (" + row + ", " + col + ")");
         grid[row][col] = valueInt;
-        mask.flip(row * size + col);
+        mask.clear(row * size + col);
+        System.out.println("Après modification : " + grid[row][col] + " à (" + row + ", " + col + ")");
+        System.out.println("État actuel du masque : " + mask);
     }
 
 
