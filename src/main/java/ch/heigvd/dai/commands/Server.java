@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -119,11 +120,21 @@ public class Server implements Callable<Integer> {
                 response = "ERROR" + " Missing <gridSize> parameter or too much parameters. Please try again.";
                 break;
               }
-              //TODO check size, Multithreads sudoku, check win condition
-              try {
-                response = "RECEIVE_GRID " + sudoku.importSudoku(clientRequestParts[1]);
-              } catch (Exception e) {
-                e.printStackTrace();
+              //TODO Multithreads sudoku, check win condition
+
+              if(Objects.equals(clientRequestParts[1], "9") || Objects.equals(clientRequestParts[1], "16")){
+                try {
+                  response = "RECEIVE_GRID " + sudoku.importSudoku(clientRequestParts[1]);
+                } catch (Exception e) {
+                  e.printStackTrace();
+                }
+              }else{
+                System.out.println(
+                        "[Server] " + command + " command received with a wrong grid size. Replying with "
+                                + "ERROR"
+                                + ".");
+                response = "ERROR" + " Choose 9 or 16 as grid size. Please try again.";
+                break;
               }
             }
             case SELECT -> {
