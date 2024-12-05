@@ -6,7 +6,7 @@ import java.util.Random;
 import java.util.List;
 
 public class Sudoku16x16FileManager  {
-    private static final String DATASET_PATH = "src/main/java/ch/heigvd/dai/dataset/16X16-Sudoku-Dataset/16x16Dataset.csv";
+    private static final String DATASET_PATH = "/app/dataset/16X16-Sudoku-Dataset/16x16Dataset.csv";
 
     /**
      * Reads a random puzzle from the 16x16 dataset

@@ -60,13 +60,10 @@ public class Sudoku {
         grid = new int[size][size];
         mask = new BitSet(size * size);  // Initialize empty mask
 
-        // split on comma or space with regex
-        String[] numbers = stringGrid.split("[,\\s]+");
-
         // Convert strings to integers and populate the grid
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
-                grid[i][j] = Integer.parseInt(numbers[i * size + j]);
+                grid[i][j] = hexToInt(stringGrid.charAt(i * size + j));
             }
         }
     }
@@ -83,7 +80,10 @@ public class Sudoku {
         Sudoku9x9FileManager manager = new Sudoku9x9FileManager();
         sudokuString = manager.getRandomPuzzle(difficulty);
 
-        BitSet new_mask =  new BitSet(9*9);
+        size = 9;
+        BitSet new_mask =  new BitSet(size*size);
+        grid = new int[size][size];
+
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
                 grid[row][col] = hexToInt(sudokuString.charAt(row*9+col));
@@ -130,7 +130,10 @@ public class Sudoku {
         Sudoku16x16FileManager manager = new Sudoku16x16FileManager();
         sudokuString = manager.getRandomPuzzle();
 
-        BitSet new_mask =  new BitSet(16*16);
+        size = 16;
+        BitSet new_mask =  new BitSet(size*size);
+        grid = new int[size][size];
+
         for (int row = 0; row < 16; row++) {
             for (int col = 0; col < 16; col++) {
                 grid[row][col] = hexToInt(sudokuString[1].charAt(row*16+col));
@@ -150,6 +153,7 @@ public class Sudoku {
 
     public String importSudoku(String new_size_string) throws IOException {
         int new_size = Integer.parseInt(new_size_string);
+
         switch (new_size) {
             case 9:
                 try {
@@ -180,17 +184,18 @@ public class Sudoku {
 
     public MoveValidity verifyMove(String position, String value) {
         // Convert position string (e.g. "B12") to row and column
+        //TODO check bound of value
         int row = position.charAt(0) - 'A';  // B -> 1
         int col = Integer.parseInt(position.substring(1)) - 1;  // 12 -> 11
         int valueInt = Integer.parseInt(value);
 
         // Check boundaries
-        if (!(row >= 0 && row < size && col >= 0 && col < size)) {
+        if (!(row >= 0 && row < size && col >= 0 && col < size) || !(valueInt >= 1 && valueInt <= size)) {
             return OUT_OF_BOUNDS;
         }
 
         // Check if not already placed
-        if (mask.get(row * size + col)) {
+        if (!mask.get(row * size + col)) {
             return ALREADY_PLACED;
         }
 
@@ -273,7 +278,7 @@ public class Sudoku {
         // Add column numbers header
         sb.append("    "); // Space for row labels (extra space for 2-digit numbers)
         for (int j = 0; j < size; j++) {
-            sb.append(" ").append(intToHex(j));
+            sb.append(" ").append(intToHex(j+1));
             if ((j + 1) % blockSize == 0 && j < size - 1) {
                 sb.append("  ");
             }

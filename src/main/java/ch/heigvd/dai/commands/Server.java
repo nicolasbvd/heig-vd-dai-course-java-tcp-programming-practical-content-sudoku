@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,7 +16,7 @@ import picocli.CommandLine;
 @CommandLine.Command(name = "server", description = "Start the server part of the network game.")
 public class Server implements Callable<Integer> {
 
-  private static Sudoku sudoku;
+  private static Sudoku sudoku = new Sudoku(9);
 
   @CommandLine.Option(
           names = {"-p", "--port"},
@@ -86,9 +87,11 @@ public class Server implements Callable<Integer> {
         while (!socket.isClosed()) {
           // Read response from client
           String clientRequest = in.readLine();
+
           // If clientRequest is null, the client has disconnected
           // The server can close the connection and wait for a new client
           if (clientRequest == null) {
+            System.out.println("[Client] closed");
             socket.close();
             continue;
           }
@@ -102,29 +105,33 @@ public class Server implements Callable<Integer> {
           } catch (Exception e) {
             // Do nothing
           }
+
           // Prepare response
           String response = null;
-
           // Handle request from client
           switch (command) {
             case PLAY -> {
               if (clientRequestParts.length != 2) {
                 System.out.println(
                         "[Server] " + command + " command received without <gridSize> parameter. Replying with "
-                                + ServerCommand.ERROR
+                                + "ERROR"
                                 + ".");
-                response = ServerCommand.ERROR + " Missing <gridSize> parameter. Please try again.";
+                response = "ERROR" + " Missing <gridSize> parameter or too much parameters. Please try again.";
                 break;
               }
-              out.write(sudoku.importSudoku(clientRequestParts[1]));
-              response = ServerCommand.OK + " OK ";
+              //TODO check size, Multithreads sudoku, check win condition
+              try {
+                response = "RECEIVE_GRID " + sudoku.importSudoku(clientRequestParts[1]);
+              } catch (Exception e) {
+                e.printStackTrace();
+              }
             }
             case SELECT -> {
               if (clientRequestParts.length != 3) {
                 System.out.println("[Server] " + command + " command received without <case name> or without <number to play> parameter. Replying with "
-                        + ServerCommand.ERROR
+                        + "ERROR"
                         + ".");
-                response = ServerCommand.ERROR + " Missing <case name> or <number to play> parameter. Please try again.";
+                response = "ERROR" + " Missing <case name> or <number to play> parameter or too much parameters. Please try again.";
                 break;
               }
 
@@ -134,27 +141,27 @@ public class Server implements Callable<Integer> {
 
               MoveValidity move = sudoku.verifyMove(caseName, numberToPlay);
               response = switch (move) {
-                case CORRECT_MOVE -> ServerCommand.CORRECT_MOVE + " CORRECT MOVE " + caseName + " " + numberToPlay;
-                case WRONG_MOVE -> ServerCommand.WRONG_MOVE + " WRONG MOVE ";
-                case ALREADY_PLACED -> ServerCommand.ALREADY_PLACED + " ALREADY PLACED ";
-                case OUT_OF_BOUNDS -> ServerCommand.OUT_OF_BOUNDS + " OUT OF BOUNDS ";
-                case COMPLETED -> ServerCommand.COMPLETED + " COMPLETED ";
+                case CORRECT_MOVE -> "CORRECT_MOVE " + caseName + " " + numberToPlay;
+                case WRONG_MOVE -> "WRONG_MOVE ";
+                case ALREADY_PLACED -> "ALREADY_PLACED ";
+                case OUT_OF_BOUNDS -> "OUT_OF_BOUNDS ";
+                case COMPLETED -> "COMPLETED ";
                 default -> response;
               };
 
             }
             case null, default -> {
               System.out.println("[Server] Unknown command sent by client, reply with "
-                      + ServerCommand.ERROR
+                      + "ERROR"
                       + ".");
-              response = ServerCommand.ERROR + " Unknown command. Please try again.";
+              response = "ERROR" + " Unknown command. Please try again.";
 
             }
           }
 
           // Send response to client
           if (response != null) {
-            out.write(response);
+            out.write(response + "\n");
             out.flush();
           }
         }

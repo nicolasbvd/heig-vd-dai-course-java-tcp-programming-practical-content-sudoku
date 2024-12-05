@@ -80,7 +80,7 @@ public class Client implements Callable<Integer> {
               help();
           }
           if (request != null) {
-            out.write(request);
+            out.write(request + "\n");
             out.flush();
           }
 
@@ -88,14 +88,17 @@ public class Client implements Callable<Integer> {
           System.out.println("Invalid command. Please try again.");
           continue;
         }
-        String serverResponse = in.readLine();
 
+
+        String serverResponse = in.readLine();
 
         // If serverResponse is null, the server has disconnected
         if (serverResponse == null) {
           socket.close();
           continue;
         }
+
+
 
         // Split response to parse message (also known as command)
         String[] serverResponseParts = serverResponse.split(" ");
@@ -107,35 +110,37 @@ public class Client implements Callable<Integer> {
           // Do nothing
         }
 
-        // Handle response from server TODO Client full wrong protocol logic 
+        // Handle response from server
         switch (message) {
           case RECEIVE_GRID->{
             sudoku = new Sudoku(serverResponseParts[1], newSize);
-            System.out.println(serverResponseParts[0]);
+            System.out.println(sudoku);
             break;
           }
           case CORRECT_MOVE -> {
-            String CorrectMove = serverResponseParts[1];
+            String CorrectMove = serverResponseParts[0];
             System.out.println(CorrectMove);
-            sudoku.verifyMove(serverResponseParts[2], serverResponseParts[3]);
+            sudoku.verifyMove(serverResponseParts[1], serverResponseParts[2]);
+            System.out.println(sudoku);
             break;
           }
           case WRONG_MOVE -> {
-            String WrongMove = serverResponseParts[1];
+            String WrongMove = serverResponseParts[0];
             System.out.println(WrongMove);
             break;
           }
           case ALREADY_PLACED -> {
-            String AlreadyPlaced = serverResponseParts[1];
+            String AlreadyPlaced = serverResponseParts[0];
             System.out.println(AlreadyPlaced);
             break;
           }
           case OUT_OF_BOUNDS -> {
-            String OutOfBounds = serverResponseParts[1];
+            String OutOfBounds = serverResponseParts[0];
             System.out.println(OutOfBounds);
             break;
           }
           case COMPLETED -> {
+              System.out.println(sudoku);
               System.out.println("Congratulations! You have completed the game.");
               help();
               break;
@@ -145,15 +150,12 @@ public class Client implements Callable<Integer> {
             break;
           }
         }
-
-
       }
-        System.out.println("[Client] Closing connection and quitting...");
-      } catch(Exception e){
-        System.out.println("[Client] Exception: " + e);
-      }
-      return 0;
-
+      System.out.println("[Client] Closing connection and quitting...");
+    } catch(Exception e){
+      System.out.println("[Client] Exception: " + e);
+    }
+    return 0;
   }
 
   private static void help() {
